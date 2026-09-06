@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>خريطة مفاهيم — أساسيات Hugging Face</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --bg2:#131a24;
+    --panel:#161d29;
+    --line:#26303f;
+    --text:#e9edf3;
+    --sub:#9aa7b8;
+    --gold:#ffcc4d;
+    --teal:#2dd4bf;
+    --violet:#a78bfa;
+    --amber:#f59e0b;
+    --rose:#fb7185;
+    --sky:#38bdf8;
+    --lime:#a3e635;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1b2433 0%, var(--bg) 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:"Segoe UI","Tahoma","Geeza Pro","Arial",sans-serif;
+    line-height:1.7;
+    padding:36px 16px 80px;
+  }
+
+  /* ===== Header / Center node ===== */
+  .hero{
+    max-width:760px;
+    margin:0 auto 46px;
+    text-align:center;
+    position:relative;
+  }
+  .hero .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:linear-gradient(135deg,#ffcc4d,#f59e0b);
+    color:#241a02;
+    font-weight:700;
+    font-size:13px;
+    padding:6px 16px;
+    border-radius:999px;
+    margin-bottom:18px;
+    letter-spacing:.3px;
+  }
+  .hero h1{
+    font-size:clamp(28px,5vw,42px);
+    margin:0 0 10px;
+    font-weight:800;
+    background:linear-gradient(90deg,#fff,#ffd9838a);
+    -webkit-background-clip:text;
+    background-clip:text;
+  }
+  .hero .core{
+    display:inline-block;
+    margin-top:18px;
+    padding:22px 40px;
+    border-radius:22px;
+    background:linear-gradient(145deg,#1c2534,#141c28);
+    border:1px solid #2c3850;
+    box-shadow:0 0 0 6px #ffcc4d14, 0 20px 40px -20px #000;
+    font-size:clamp(18px,3vw,24px);
+    font-weight:800;
+    position:relative;
+  }
+  .hero .core .emoji{font-size:30px;display:block;margin-bottom:6px;}
+  .hero .meta{color:var(--sub);font-size:14px;margin-top:14px;}
+  .hero .meta b{color:var(--text);}
+
+  .trunk{
+    width:2px;height:36px;
+    background:linear-gradient(#ffcc4d, #26303f);
+    margin:0 auto;
+  }
+
+  /* ===== layout of branch groups ===== */
+  .map{
+    max-width:980px;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    gap:26px;
+  }
+
+  .branch{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow:hidden;
+    position:relative;
+  }
+  .branch::before{
+    content:"";
+    position:absolute; inset:0 auto 0 0;
+    width:5px;
+    background:var(--accent,#ffcc4d);
+  }
+  .branch-head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:16px 20px 16px 18px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .branch-head .icon{
+    width:42px;height:42px;
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;
+    background:color-mix(in srgb, var(--accent,#ffcc4d) 18%, transparent);
+    border:1px solid color-mix(in srgb, var(--accent,#ffcc4d) 40%, transparent);
+    flex-shrink:0;
+  }
+  .branch-head .titles{flex:1;}
+  .branch-head h2{
+    margin:0;
+    font-size:18px;
+    font-weight:800;
+    color:var(--accent,#ffcc4d);
+  }
+  .branch-head .sub{
+    font-size:13px;
+    color:var(--sub);
+    margin-top:2px;
+  }
+  .chev{
+    color:var(--sub);
+    transition:transform .25s ease;
+    font-size:14px;
+    flex-shrink:0;
+  }
+  .branch.open .chev{transform:rotate(180deg);}
+  .branch-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s ease;
+    padding:0 20px;
+  }
+  .branch.open .branch-body{
+    padding:0 20px 20px;
+  }
+
+  /* nodes inside a branch */
+  .nodes{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:12px;
+    margin-top:6px;
+  }
+  .node{
+    background:var(--bg2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .node h3{
+    margin:0 0 6px;
+    font-size:14.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#fff;
+  }
+  .node h3 .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent,#ffcc4d);
+    flex-shrink:0;
+  }
+  .node p{
+    margin:0;
+    font-size:13px;
+    color:var(--sub);
+  }
+  .node code{
+    display:block;
+    background:#0a0e14;
+    border:1px solid #222c3a;
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:12px;
+    color:#7ee787;
+    direction:ltr;
+    text-align:left;
+    margin-top:8px;
+    overflow-x:auto;
+    font-family:Consolas,Menlo,monospace;
+  }
+
+  /* topics list (13 numbered) */
+  .topics{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:6px;
+  }
+  .topic-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:var(--bg2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 14px;
+  }
+  .topic-row .num{
+    background:var(--accent,#ffcc4d);
+    color:#1a1300;
+    font-weight:800;
+    font-size:12px;
+    width:24px;height:24px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    margin-top:2px;
+  }
+  .topic-row .txt b{font-size:13.5px;color:#fff;}
+  .topic-row .txt span{display:block;font-size:12.5px;color:var(--sub);margin-top:2px;}
+  .topic-row.current{border-color:var(--accent,#ffcc4d); background:color-mix(in srgb, var(--accent,#ffcc4d) 10%, var(--bg2));}
+
+  /* grading table */
+  .grade-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;}
+  .grade-table th{
+    text-align:right;color:var(--sub);font-weight:600;
+    padding:8px 10px;border-bottom:1px solid var(--line);font-size:12px;
+  }
+  .grade-table td{
+    padding:9px 10px;border-bottom:1px solid var(--line);
+  }
+  .grade-table tr:last-child td{border-bottom:none;font-weight:800;color:var(--accent,#ffcc4d);}
+  .bar{
+    height:8px;border-radius:6px;background:#0a0e14;overflow:hidden;margin-top:4px;
+  }
+  .bar i{display:block;height:100%;background:var(--accent,#ffcc4d);}
+
+  /* mini legend */
+  .legend{
+    max-width:980px;margin:34px auto 0;
+    display:flex;flex-wrap:wrap;gap:10px;
+    justify-content:center;
+    font-size:12px;color:var(--sub);
+  }
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+  .hint{
+    text-align:center;color:var(--sub);font-size:12.5px;margin-top:10px;
+  }
+
+  @media(max-width:520px){
+    .branch-head{padding:14px;}
+    .branch-head h2{font-size:16px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="hero">
+    <div class="badge">🤗 دبلوم الذكاء الاصطناعي التوليدي · HGF302</div>
+    <h1>خريطة مفاهيم — أساسيات Hugging Face</h1>
+    <div class="trunk"></div>
+    <div class="core">
+      <span class="emoji">🧠</span>
+      الموضوع الأول: مدخل إلى نظام Hugging Face Hub
+    </div>
+    <div class="meta">اضغط على أي فرع لفتحه أو إغلاقه — <b>ابدأ بالأخضر</b> وانتقل حسب الترتيب</div>
+  </div>
+
+  <div class="map" id="map">
+
+    <!-- 1 -->
+    <div class="branch open" style="--accent:var(--lime)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">📋</div>
+        <div class="titles">
+          <h2>معلومات المقرر</h2>
+          <div class="sub">البيانات العامة والمتطلبات</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>الساعات المعتمدة</h3><p>52 ساعة موزعة على 13 موضوعًا × 4 ساعات لكل موضوع</p></div>
+          <div class="node"><h3><span class="dot"></span>نوع المقرر</h3><p>متطلب تخصص ضمن دبلوم الذكاء الاصطناعي التوليدي</p></div>
+          <div class="node"><h3><span class="dot"></span>المتطلبات السابقة</h3><p>PYT 103 · STA 104 · NLP 203</p></div>
+          <div class="node"><h3><span class="dot"></span>نمط التعليم</h3><p>التعليم عن بُعد بالكامل</p></div>
+        </div>
+        <div class="node" style="margin-top:12px;">
+          <h3><span class="dot"></span>الوصف العام</h3>
+          <p>تزويد الطلبة بالمعرفة والمهارات لاستخدام منصة Hugging Face في تطوير تطبيقات الذكاء الاصطناعي التوليدي: مكوناتها، مكتبة Transformers، إدارة البيانات، الضبط الدقيق (Fine-tuning)، وبناء ونشر النماذج.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="branch" style="--accent:var(--sky)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🗂️</div>
+        <div class="titles">
+          <h2>موضوعات المقرر الـ 13</h2>
+          <div class="sub">خارطة الطريق الكاملة للفصل الدراسي</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="topics">
+          <div class="topic-row current"><div class="num">1</div><div class="txt"><b>مدخل إلى نظام Hugging Face</b><span>الـ Hub، استكشاف النماذج والبيانات، Model Cards — نحن هنا الآن</span></div></div>
+          <div class="topic-row"><div class="num">2</div><div class="txt"><b>أساسيات مكتبة Transformers</b><span>معمارية النماذج، أداة Pipeline (NLP, Vision, Audio)</span></div></div>
+          <div class="topic-row"><div class="num">3</div><div class="txt"><b>معالجة النصوص (Tokenization)</b><span>أنواع Tokenizers، تحويل النص لأرقام، Special Tokens</span></div></div>
+          <div class="topic-row"><div class="num">4</div><div class="txt"><b>إدارة البيانات (Datasets)</b><span>تحميل من الـ Hub، معالجة البيانات، تقسيم Split</span></div></div>
+          <div class="topic-row"><div class="num">5</div><div class="txt"><b>مقدمة في الضبط الدقيق</b><span>Transfer Learning، التدريب الكامل مقابل Fine-tuning</span></div></div>
+          <div class="topic-row"><div class="num">6</div><div class="txt"><b>تصنيف النصوص — القسم الأول</b><span>Fine-tuning على بيانات عربية، تحليل النتائج</span></div></div>
+          <div class="topic-row"><div class="num">7</div><div class="txt"><b>مهام متقدمة NER و Q&A — القسم الثاني</b><span>استخراج المعلومات، الإجابة على الأسئلة</span></div></div>
+          <div class="topic-row"><div class="num">8</div><div class="txt"><b>تحسين الأداء (Optimization)</b><span>مكتبة Accelerate، تقنية Mixed Precision</span></div></div>
+          <div class="topic-row"><div class="num">9</div><div class="txt"><b>تقييم النماذج وأخلاقياتها</b><span>مكتبة Evaluate، فحص التحيزات Bias</span></div></div>
+          <div class="topic-row"><div class="num">10</div><div class="txt"><b>النماذج التوليدية</b><span>GPT وLLMs، استراتيجيات توليد النصوص</span></div></div>
+          <div class="topic-row"><div class="num">11</div><div class="txt"><b>بناء الواجهات ونشر التطبيقات</b><span>Gradio، نشر عبر Hugging Face Spaces</span></div></div>
+          <div class="topic-row"><div class="num">12</div><div class="txt"><b>مشروع تطبيقي</b><span>بناء نموذج، واجهة مستخدم، تكامل النظام</span></div></div>
+          <div class="topic-row"><div class="num">13</div><div class="txt"><b>تقييم وتحسين التطبيقات</b><span>تحليل الأخطاء، عرض المشاريع ومناقشتها</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="branch" style="--accent:var(--rose)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">📝</div>
+        <div class="titles">
+          <h2>أنشطة تقييم الطلبة</h2>
+          <div class="sub">توزيع الدرجة الكاملة 100%</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <table class="grade-table">
+          <tr><th>النشاط</th><th>الأسبوع</th><th>النسبة</th></tr>
+          <tr><td>واجب أو تكليف</td><td>6</td><td>8% <div class="bar"><i style="width:8%"></i></div></td></tr>
+          <tr><td>اختبارات قصيرة (2)</td><td>4–11</td><td>14% <div class="bar"><i style="width:14%"></i></div></td></tr>
+          <tr><td>مشروع</td><td>3–13</td><td>13% <div class="bar"><i style="width:13%"></i></div></td></tr>
+          <tr><td>مشاركة وحضور</td><td>1–13</td><td>5% <div class="bar"><i style="width:5%"></i></div></td></tr>
+          <tr><td>اختبار نصفي</td><td>7–8</td><td>20% <div class="bar"><i style="width:20%"></i></div></td></tr>
+          <tr><td>اختبار نهائي</td><td>14–16</td><td>40% <div class="bar"><i style="width:40%"></i></div></td></tr>
+          <tr><td>الإجمالي</td><td>—</td><td>100%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="branch open" style="--accent:var(--gold)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🎯</div>
+        <div class="titles">
+          <h2>أهداف الموضوع الأول</h2>
+          <div class="sub">في نهاية الدرس سيكون الطالب قادرًا على</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>1️⃣ الفهم</h3><p>يوضح مفهوم منصة Hugging Face Hub ومكوناتها الأساسية</p></div>
+          <div class="node"><h3><span class="dot"></span>2️⃣ الاستكشاف</h3><p>يتعرف على النماذج والبيانات المتاحة في مكتبة Transformers</p></div>
+          <div class="node"><h3><span class="dot"></span>3️⃣ التطبيق</h3><p>يستخدم أدوات Pipeline لتنفيذ مهام الذكاء الاصطناعي المختلفة</p></div>
+          <div class="node"><h3><span class="dot"></span>4️⃣ المعالجة</h3><p>يطبق معالجة النصوص وتحليلها باستخدام نماذج جاهزة</p></div>
+          <div class="node"><h3><span class="dot"></span>5️⃣ التوثيق</h3><p>يشرح مفهوم بطاقات النماذج وأهميتها في التوثيق</p></div>
+          <div class="node"><h3><span class="dot"></span>6️⃣ المشاركة</h3><p>يرفع النماذج ويشاركها عبر Hugging Face Hub</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: Hub definition -->
+    <div class="branch open" style="--accent:var(--teal)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🌐</div>
+        <div class="titles">
+          <h2>ما هو Hugging Face Hub؟</h2>
+          <div class="sub">التعريف والحجم والمجتمع</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>📖 التعريف</h3><p>منصة مركزية مفتوحة المصدر تجمع نماذج الذكاء الاصطناعي ومجموعات البيانات والتطبيقات التفاعلية في مكان واحد</p></div>
+          <div class="node"><h3><span class="dot"></span>📊 حجم المنصة</h3><p>أكثر من <b style="color:#fff">500,000</b> نموذج و<b style="color:#fff">150,000</b> مجموعة بيانات وآلاف التطبيقات — مجانًا</p></div>
+          <div class="node"><h3><span class="dot"></span>👥 المجتمع</h3><p>أكثر من 15 مليون مستخدم من الباحثين والمطورين ينشرون النماذج ويطوّرون الأدوات</p></div>
+          <div class="node"><h3><span class="dot"></span>⚡ سهولة الاستخدام</h3><p>تحميل أي نموذج بسطر واحد من Python، مع Inference API للتجربة الفورية دون كتابة كود</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: Why use it -->
+    <div class="branch" style="--accent:var(--violet)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">💡</div>
+        <div class="titles">
+          <h2>لماذا نستخدم Hugging Face Hub؟</h2>
+          <div class="sub">6 أسباب رئيسية</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>⏱️ توفير الوقت</h3><p>لا حاجة لتدريب النماذج من الصفر — استخدم نماذج جاهزة ومُحسّنة</p></div>
+          <div class="node"><h3><span class="dot"></span>🎨 التنوع الهائل</h3><p>أكثر من 500 ألف نموذج يغطي NLP وVision وAudio وMultimodal</p></div>
+          <div class="node"><h3><span class="dot"></span>🚀 المجتمع النشط</h3><p>+15 مليون مستخدم يساهمون بنماذج وبيانات وتطبيقات يوميًا</p></div>
+          <div class="node"><h3><span class="dot"></span>🔍 الشفافية</h3><p>بطاقات النماذج (Model Cards) توثّق كل نموذج بتفاصيله وقيوده</p></div>
+          <div class="node"><h3><span class="dot"></span>🔗 التكامل السهل</h3><p>يتكامل مع PyTorch وTensorFlow وJAX وأدوات MLOps المختلفة</p></div>
+          <div class="node"><h3><span class="dot"></span>🌍 الديمقراطية</h3><p>النماذج المتطورة متاحة للجميع مجانًا بلا حواجز</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7: components -->
+    <div class="branch" style="--accent:var(--amber)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🧩</div>
+        <div class="titles">
+          <h2>المكونات الرئيسية لـ Hub</h2>
+          <div class="sub">Models · Datasets · Spaces · Organizations</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>🤖 النماذج (Models)</h3><p>+500,000 نموذج جاهز، قابلة للتصفية حسب المهمة واللغة والترخيص، مع Inference API للتجربة الفورية</p></div>
+          <div class="node"><h3><span class="dot"></span>📚 البيانات (Datasets)</h3><p>+150,000 مجموعة بيانات: نصوص، صور، صوت، بيانات جدولية جاهزة للاستخدام</p></div>
+          <div class="node"><h3><span class="dot"></span>🖥️ المساحات (Spaces)</h3><p>منصة لنشر تطبيقات AI تفاعلية باستخدام Gradio أو Streamlit، مجانًا مع خيارات GPU</p></div>
+          <div class="node"><h3><span class="dot"></span>🏢 المنظمات (Organizations)</h3><p>مساحات مشتركة للفرق والشركات والجامعات تضم نماذجها تحت هوية موحدة</p></div>
+        </div>
+        <div class="node" style="margin-top:12px;">
+          <h3><span class="dot"></span>💬 مكوّن إضافي: المناقشات (Discussions)</h3>
+          <p>قسم مجتمعي لكل نموذج يتيح طرح الأسئلة ورفع التقارير والتفاعل مع المطورين. يشبه Hub وظيفيًا GitHub لكنه مخصص للذكاء الاصطناعي، ويدعم Git LFS لتخزين ملفات الأوزان الكبيرة.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8: Search steps -->
+    <div class="branch" style="--accent:var(--lime)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🔎</div>
+        <div class="titles">
+          <h2>خطوات البحث الفعّال عن نموذج</h2>
+          <div class="sub">4 خطوات مرتبة</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="topics">
+          <div class="topic-row"><div class="num">1</div><div class="txt"><b>ابدأ بشريط البحث</b><span>اكتب اسم المهمة (sentiment-analysis) أو اسم النموذج (bert)</span></div></div>
+          <div class="topic-row"><div class="num">2</div><div class="txt"><b>طبّق الفلاتر</b><span>حدّد المهمة، المكتبة، اللغة (Arabic)، والترخيص المناسب</span></div></div>
+          <div class="topic-row"><div class="num">3</div><div class="txt"><b>رتّب النتائج</b><span>اختر ترتيبًا حسب التنزيلات أو التقييمات أو تاريخ التحديث</span></div></div>
+          <div class="topic-row"><div class="num">4</div><div class="txt"><b>اقرأ بطاقة النموذج</b><span>تحقق من الاستخدامات والقيود والأداء قبل اتخاذ القرار</span></div></div>
+        </div>
+        <div class="node" style="margin-top:12px;"><h3>💡 نصيحة للحفظ</h3><p>ابحث عن نماذج مقيَّمة على نفس مهمتك ونفس لغتك قبل استخدام النموذج الافتراضي</p></div>
+      </div>
+    </div>
+
+    <!-- 9: model page contents -->
+    <div class="branch" style="--accent:var(--sky)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">📄</div>
+        <div class="titles">
+          <h2>صفحة النموذج — ماذا تجد فيها؟</h2>
+          <div class="sub">رأس الصفحة، التبويبات، الملفات، الاختبار الفوري</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>🏷️ رأس الصفحة</h3><p>اسم النموذج، المؤلف، تاريخ النشر والتحديث، عدد التنزيلات الشهرية والإعجابات</p></div>
+          <div class="node"><h3><span class="dot"></span>📑 التبويبات</h3><p>Model Card (الرئيسية) — Files (الملفات) — Community (النقاشات) — Settings (الإعدادات)</p></div>
+          <div class="node"><h3><span class="dot"></span>📁 ملفات النموذج</h3><p>config.json لإعدادات النموذج، tokenizer_config.json، pytorch_model.bin للأوزان</p></div>
+          <div class="node"><h3><span class="dot"></span>⚡ Inference API</h3><p>صندوق اختبار فوري في المتصفح: أدخل نصًا وانظر مخرجات النموذج دون كتابة كود</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10: task categories -->
+    <div class="branch" style="--accent:var(--violet)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🏷️</div>
+        <div class="titles">
+          <h2>تصنيف النماذج حسب المهمة</h2>
+          <div class="sub">NLP · الرؤية · الصوت</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>💬 نماذج NLP</h3><p><b style="color:#fff">أمثلة:</b> BERT, T5, GPT-2, AraBERT, Llama<br><b style="color:#fff">المهام:</b> تصنيف، ترجمة، تلخيص، NER، QA</p></div>
+          <div class="node"><h3><span class="dot"></span>🖼️ نماذج الرؤية</h3><p><b style="color:#fff">أمثلة:</b> ViT, YOLO, DETR, SAM, CLIP<br><b style="color:#fff">المهام:</b> تصنيف صور، كشف أجسام، تجزئة</p></div>
+          <div class="node"><h3><span class="dot"></span>🎙️ نماذج الصوت</h3><p><b style="color:#fff">أمثلة:</b> Whisper, Wav2Vec2, SpeechT5<br><b style="color:#fff">المهام:</b> ASR، تصنيف صوتي، تحويل نص لكلام</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11: famous models -->
+    <div class="branch" style="--accent:var(--amber)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">⭐</div>
+        <div class="titles">
+          <h2>أشهر النماذج على Hugging Face Hub</h2>
+          <div class="sub">6 نماذج مرجعية</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>BERT (Google)</h3><p>نموذج Encoder ثوري لفهم النص — 110 مليون معامل — ترخيص Apache 2.0</p></div>
+          <div class="node"><h3><span class="dot"></span>Llama 3 (Meta)</h3><p>نموذج لغة كبير مفتوح المصدر يتنافس مع GPT-4 في الأداء</p></div>
+          <div class="node"><h3><span class="dot"></span>Whisper (OpenAI)</h3><p>نموذج تحويل الكلام لنص يدعم 99 لغة منها العربية — ترخيص MIT</p></div>
+          <div class="node"><h3><span class="dot"></span>Stable Diffusion</h3><p>توليد صور احترافية من نص — ترخيص OpenRAIL-M — من Stability AI</p></div>
+          <div class="node"><h3><span class="dot"></span>Mistral 7B</h3><p>نموذج لغوي خفيف وقوي من Mistral AI الفرنسية يتفوق على نماذج أضعف بكثير</p></div>
+          <div class="node"><h3><span class="dot"></span>AraBERT (AUB)</h3><p>أفضل نموذج BERT للغة العربية، مدرَّب على 77GB من النصوص</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12: pipeline -->
+    <div class="branch open" style="--accent:var(--teal)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🔧</div>
+        <div class="titles">
+          <h2>Pipeline — تشغيل النماذج بسهولة</h2>
+          <div class="sub">3 أسطر تكفي لتشغيل نموذج متكامل</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="node">
+          <h3><span class="dot"></span>ما هو Pipeline؟</h3>
+          <p>واجهة عالية المستوى من مكتبة transformers تُحمّل النموذج تلقائيًا من Hub، وتُشغّل الـ Tokenizer، وتعالج المدخلات، وتحوّل المخرجات لصيغة مقروءة.</p>
+          <code>from transformers import pipeline
+classifier = pipeline("sentiment-analysis")
+result = classifier("I love AI!")</code>
+        </div>
+        <div class="nodes" style="margin-top:12px;">
+          <div class="node"><h3><span class="dot"></span>😊 sentiment-analysis</h3><p>تحليل المشاعر</p></div>
+          <div class="node"><h3><span class="dot"></span>🏷️ text-classification</h3><p>تصنيف النصوص</p></div>
+          <div class="node"><h3><span class="dot"></span>🧬 token-classification</h3><p>استخراج كيانات NER</p></div>
+          <div class="node"><h3><span class="dot"></span>❓ question-answering</h3><p>الإجابة على الأسئلة</p></div>
+          <div class="node"><h3><span class="dot"></span>✍️ text-generation</h3><p>توليد النصوص</p></div>
+          <div class="node"><h3><span class="dot"></span>📝 summarization</h3><p>تلخيص النصوص</p></div>
+          <div class="node"><h3><span class="dot"></span>🌐 translation</h3><p>الترجمة الآلية</p></div>
+          <div class="node"><h3><span class="dot"></span>🧩 fill-mask</h3><p>ملء الفراغات</p></div>
+          <div class="node"><h3><span class="dot"></span>🖼️ image-classification</h3><p>تصنيف الصور</p></div>
+          <div class="node"><h3><span class="dot"></span>🎙️ automatic-speech-recognition</h3><p>التعرف على الكلام</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 13: practical code examples -->
+    <div class="branch" style="--accent:var(--rose)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">💻</div>
+        <div class="titles">
+          <h2>أمثلة عملية بالكود</h2>
+          <div class="sub">تنزيل واستخدام النماذج لمهام مختلفة</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="node">
+          <h3><span class="dot"></span>الطريقة الأساسية: AutoTokenizer + AutoModel</h3>
+          <p>يختاران تلقائيًا الفئة الصحيحة بناءً على اسم النموذج. النماذج تُحمَّل مرة واحدة وتُخزَّن في الذاكرة المؤقتة (~/.cache/huggingface/) لتجنب التنزيل المتكرر. للنماذج الكبيرة أضف device='cuda' لاستخدام GPU.</p>
+          <code>sa = pipeline("sentiment-analysis")
+results = sa(["I love this product!", "This is terrible"])</code>
+        </div>
+        <div class="nodes" style="margin-top:12px;">
+          <div class="node">
+            <h3><span class="dot"></span>🔤 تلخيص النصوص</h3>
+            <p>استخراجي: يختار أهم الجمل كما هي. توليدي: يُنشئ جملًا جديدة (تستخدمه BART وT5).</p>
+            <code>summarizer = pipeline("summarization",
+  model="facebook/bart-large-cnn")</code>
+          </div>
+          <div class="node">
+            <h3><span class="dot"></span>🌍 الترجمة الآلية</h3>
+            <p>مجموعة Helsinki-NLP تدعم +1000 زوج لغوي، منها opus-mt-ar-en للعربية مجانًا. mBART-50 يدعم 50 لغة، وNLLB-200 من Meta يدعم 200 لغة.</p>
+            <code>translator = pipeline("translation_en_to_fr",
+  model="Helsinki-NLP/opus-mt-en-fr")</code>
+          </div>
+          <div class="node">
+            <h3><span class="dot"></span>✨ توليد النصوص</h3>
+            <p>نماذج التوليد: GPT-2, LLaMA, Mistral 7B, Falcon — استخدم temperature وtop_p للتحكم بالإبداع.</p>
+            <code>unmasker = pipeline("fill-mask")
+unmasker("Paris is the [MASK] of France.")</code>
+          </div>
+          <div class="node">
+            <h3><span class="dot"></span>🇸🇦 تحليل النص العربي</h3>
+            <p>ابحث بفلتر Language → Arabic. مختبرات CAMeL-Lab (الجامعة الأمريكية ببيروت) وAraBERT (AUB) من أفضل النماذج العربية المتاحة مجانًا.</p>
+            <code>qa = pipeline("question-answering")
+qa({"question": "...", "context": "..."})</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14: Datasets library -->
+    <div class="branch" style="--accent:var(--sky)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">📊</div>
+        <div class="titles">
+          <h2>مجموعات البيانات (Datasets)</h2>
+          <div class="sub">تحميل، تصفية، معالجة، مشاركة</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>الوصول للبيانات</h3><p>تُعاد كـ dict بسيط: dataset['train'] للتدريب، dataset['test'] للاختبار</p></div>
+          <div class="node"><h3><span class="dot"></span>التصفية والمعالجة</h3><p>dataset.filter(...) للتصفية، dataset.map(...) للمعالجة، batched=True لمعالجة أسرع</p></div>
+          <div class="node"><h3><span class="dot"></span>تحميل جزئي</h3><p>حمّل جزءًا صغيرًا فقط: split='train[:10%]' لتوفير الوقت</p></div>
+          <div class="node"><h3><span class="dot"></span>رفع البيانات</h3><p>dataset.push_to_hub('username/my-dataset') لمشاركة بياناتك على Hub</p></div>
+        </div>
+        <div class="node" style="margin-top:12px;">
+          <h3><span class="dot"></span>🇸🇦 أبرز مجموعات البيانات العربية</h3>
+          <p><b style="color:#fff">Wikipedia AR:</b> ملايين المقالات، الأساس الرئيسي لتدريب AraBERT · <b style="color:#fff">OSCAR Arabic:</b> +77GB نصوص مصنّفة حسب الجودة · <b style="color:#fff">ANERcorp:</b> بيانات معلَّمة للتعرف على الكيانات · <b style="color:#fff">Common Voice:</b> +2500 ساعة صوتية متعددة اللغات من Mozilla</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 15: Model cards -->
+    <div class="branch open" style="--accent:var(--amber)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🏷️</div>
+        <div class="titles">
+          <h2>بطاقات النماذج (Model Cards)</h2>
+          <div class="sub">وثيقة README.md التي تُوثّق كل نموذج</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>📖 التعريف</h3><p>وثيقة Markdown مرافقة لكل نموذج تُوثّق: من صنعه؟ على ماذا دُرِّب؟ كيف يُستخدم؟</p></div>
+          <div class="node"><h3><span class="dot"></span>⭐ الأهمية</h3><p>أصبحت معيارًا إلزاميًا عند نشر نماذج على Hub، ومتطلبًا في معظم المجلات العلمية</p></div>
+        </div>
+        <h3 style="margin:16px 0 8px;font-size:15px;">📚 أقسام بطاقة النموذج الرئيسية</h3>
+        <div class="topics">
+          <div class="topic-row"><div class="num">1</div><div class="txt"><b>الوصف الأساسي</b><span>المعمارية، الحجم بالمعاملات، المطوّر، اللغات المدعومة، الترخيص</span></div></div>
+          <div class="topic-row"><div class="num">2</div><div class="txt"><b>الاستخدامات والقيود</b><span>المهام الموصى بها، حالات عدم الملاءمة، القيود التقنية كحد السياق</span></div></div>
+          <div class="topic-row"><div class="num">3</div><div class="txt"><b>الاعتبارات الأخلاقية</b><span>الانحيازات المحتملة، العدالة بين المجموعات، الأثر البيئي للتدريب</span></div></div>
+        </div>
+        <div class="node" style="margin-top:12px;">
+          <h3><span class="dot"></span>🔍 مثال: بطاقة نموذج BERT</h3>
+          <p>بيانات التدريب: BooksCorpus (800M كلمة) + Wikipedia EN (2.5B كلمة) · الاستخدام: تصنيف نص، QA، NER — حجم السياق 512 token كحد أقصى · القيود: لا يولّد نصًا (Encoder فقط)، إنجليزي فقط في هذا الإصدار · الأداء: 84.6% على GLUE Benchmark — ترخيص Apache 2.0 مجاني للتجاري</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 16: Upload models -->
+    <div class="branch" style="--accent:var(--violet)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">🚀</div>
+        <div class="titles">
+          <h2>رفع النماذج والتخصيص على Hub</h2>
+          <div class="sub">من التجربة المحلية إلى المشاركة العالمية</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="topics">
+          <div class="topic-row"><div class="num">1</div><div class="txt"><b>إنشاء المستودع</b><span>أنشئ مستودعًا خاصًا أو عامًا من واجهة Hub أو عبر HfApi().create_repo()</span></div></div>
+          <div class="topic-row"><div class="num">2</div><div class="txt"><b>حفظ ورفع</b><span>save_pretrained() لحفظ محليًا، ثم upload_folder() أو push_to_hub() للرفع</span></div></div>
+          <div class="topic-row"><div class="num">3</div><div class="txt"><b>إنشاء README.md</b><span>أضف ملف README.md في جذر المستودع مع البيانات الوصفية (language, license, tags)</span></div></div>
+          <div class="topic-row"><div class="num">4</div><div class="txt"><b>إضافة الوصف والتقييم</b><span>وصف واضح للمعمارية وبيانات التدريب، وتوثيق الأداء بمقاييس مثل Accuracy أو F1 أو BLEU</span></div></div>
+          <div class="topic-row"><div class="num">5</div><div class="txt"><b>إضافة قسم الأخلاقيات</b><span>وثّق الانحيازات المحتملة والمخاطر وكيفية الاستخدام المسؤول</span></div></div>
+        </div>
+        <div class="node" style="margin-top:12px;">
+          <h3><span class="dot"></span>🇸🇦 مثال: نموذج عربي متخصص</h3>
+          <code>arabic_clf = pipeline("text-classification",
+  model="aubmindlab/bert-base-arabertv02",
+  tokenizer="aubmindlab/bert-base-arabertv02",
+  device=0)  # استخدام GPU</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- 17: Best practices -->
+    <div class="branch" style="--accent:var(--lime)">
+      <div class="branch-head" onclick="toggle(this)">
+        <div class="icon">✅</div>
+        <div class="titles">
+          <h2>نصائح وأفضل الممارسات</h2>
+          <div class="sub">عند استخدام Hub بكفاءة</div>
+        </div>
+        <div class="chev">▾</div>
+      </div>
+      <div class="branch-body">
+        <div class="nodes">
+          <div class="node"><h3><span class="dot"></span>⚡ اختر النموذج المناسب</h3><p>ابحث في Hub بالمهمة واللغة والترخيص، وقارن أداء عدة نماذج قبل الاختيار</p></div>
+          <div class="node"><h3><span class="dot"></span>🔍 اقرأ بطاقة النموذج دائمًا</h3><p>تحقق من القيود، الانحيازات، والترخيص قبل الاستخدام</p></div>
+          <div class="node"><h3><span class="dot"></span>🇸🇦 فضّل النماذج العربية المتخصصة</h3><p>AraBERT أو AraT5 أو CAMeLBERT على النماذج متعددة اللغات</p></div>
+          <div class="node"><h3><span class="dot"></span>💾 الذاكرة المؤقتة</h3><p>النماذج تُخزَّن في ~/.cache/huggingface/ — استخدم HF_HOME لتغيير المسار</p></div>
+          <div class="node"><h3><span class="dot"></span>🚀 استخدم GPU</h3><p>أضف device=0 أو device_map='auto' للنماذج الكبيرة متعددة GPU</p></div>
+          <div class="node"><h3><span class="dot"></span>📏 راقب حدود السياق</h3><p>BERT: 512 token كحد أقصى — Llama: 4096+ — تحقق من config.json لكل نموذج</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--lime)"></i>معلومات عامة</span>
+    <span><i style="background:var(--sky)"></i>موضوعات ومهام</span>
+    <span><i style="background:var(--rose)"></i>تقييم وتطبيقات</span>
+    <span><i style="background:var(--gold)"></i>الأهداف</span>
+    <span><i style="background:var(--teal)"></i>Hub وPipeline</span>
+    <span><i style="background:var(--violet)"></i>لماذا/الرفع</span>
+    <span><i style="background:var(--amber)"></i>مكونات وبطاقات</span>
+  </div>
+  <div class="hint">💡 اضغط على عناوين الفروع لطيّها أو فتحها — الفروع المفتوحة الآن هي الأهم للحفظ السريع</div>
+
+<script>
+function setBranchHeight(branch, open) {
+  const body = branch.querySelector('.branch-body');
+  if (!body) return;
+
+  if (open) {
+    branch.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      branch.classList.remove('open');
+      body.style.maxHeight = '0px';
+    });
+  }
+}
+
+function toggle(head) {
+  const branch = head.parentElement;
+  const body = branch.querySelector('.branch-body');
+  const isOpen = branch.classList.contains('open');
+
+  if (isOpen) {
+    setBranchHeight(branch, false);
+  } else {
+    setBranchHeight(branch, true);
+  }
+}
+
+// تهيئة الفروع المفتوحة عند تحميل الصفحة، وضبط الارتفاع
+// مجدداً عند تغيير حجم النافذة.
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.branch').forEach(branch => {
+    const body = branch.querySelector('.branch-body');
+    if (!body) return;
+
+    if (branch.classList.contains('open')) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+    } else {
+      body.style.maxHeight = '0px';
+    }
+  });
+});
+
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.branch.open .branch-body').forEach(body => {
+    body.style.maxHeight = body.scrollHeight + 'px';
+  });
+});
+</script>
+</body>
+</html>
